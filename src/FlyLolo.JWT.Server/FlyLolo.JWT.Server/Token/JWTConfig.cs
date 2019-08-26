@@ -11,5 +11,8 @@ namespace FlyLolo.JWT.Server
         public string Audience { get; set; }
         public string IssuerSigningKey { get; set; }
         public int AccessTokenExpiresMinutes { get; set; }
+
+        public string RefreshTokenAudience { get; set; }
+        public int RefreshTokenExpiresMinutes { get; set; }
     }
 }

@@ -12,4 +12,10 @@ namespace FlyLolo.JWT.Server
 
         public DateTime Expires { get; set; }
     }
+
+    public class ComplexToken
+    {
+        public Token AccessToken { get; set; }
+        public Token RefreshToken { get; set; }
+    }
 }

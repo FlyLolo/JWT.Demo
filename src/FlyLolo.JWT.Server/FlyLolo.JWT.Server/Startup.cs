@@ -25,6 +25,8 @@ namespace FlyLolo.JWT.Server
             #region 读取配置信息
             services.AddSingleton<ITokenHelper, TokenHelper>();
             services.Configure<JWTConfig>(Configuration.GetSection("JWT"));
+            JWTConfig config = new JWTConfig();
+            Configuration.GetSection("JWT").Bind(config);
             #endregion
 
             #region 启用JWT
@@ -33,7 +35,15 @@ namespace FlyLolo.JWT.Server
                 Options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 Options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).
-            AddJwtBearer();
+             AddJwtBearer(options =>
+             {
+                 options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidIssuer = config.Issuer,
+                     ValidAudience = config.RefreshTokenAudience,
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.IssuerSigningKey))
+                 };
+             });
             #endregion
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

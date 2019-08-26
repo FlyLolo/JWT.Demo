@@ -4,7 +4,9 @@ namespace FlyLolo.JWT.Server
 {
     public interface ITokenHelper
     {
-        Token CreateToken(User user);
+        ComplexToken CreateToken(User user);
+        ComplexToken CreateToken(Claim[] claims);
+        Token RefreshToken(ClaimsPrincipal claimsPrincipal);
 
     }
 }

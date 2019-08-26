@@ -16,6 +16,7 @@ namespace FlyLolo.JWT.Server.Controllers
         {
             tokenHelper = _tokenHelper;
         }
+
         [HttpGet]
         public IActionResult Get(string code, string pwd)
         {
@@ -26,5 +27,12 @@ namespace FlyLolo.JWT.Server.Controllers
             }
             return BadRequest();
         }
+
+[HttpPost]
+[Authorize]
+public IActionResult Post()
+{
+    return Ok(tokenHelper.RefreshToken(Request.HttpContext.User));
+}
     }
 }
