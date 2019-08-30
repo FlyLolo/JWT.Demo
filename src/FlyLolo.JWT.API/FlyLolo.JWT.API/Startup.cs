@@ -1,44 +1,47 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using FlyLolo.JWT.API.Authorize;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace FlyLolo.JWT.API
 {
-public class Startup
-{
-    public Startup(IConfiguration configuration)
+    public class Startup
     {
-        Configuration = configuration;
-    }
-
-    public IConfiguration Configuration { get; }
-
-    // This method gets called by the runtime. Use this method to add services to the container.
-    public void ConfigureServices(IServiceCollection services)
-    {
-        #region 读取配置
-        JWTConfig config = new JWTConfig();
-        Configuration.GetSection("JWT").Bind(config);
-        #endregion
-
-        #region 启用JWT认证
-        services.AddAuthentication(options =>
+        public Startup(IConfiguration configuration)
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).
-        AddJwtBearer(options =>
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
         {
-            options.TokenValidationParameters = new TokenValidationParameters
+            #region 读取配置
+            JWTConfig config = new JWTConfig();
+            Configuration.GetSection("JWT").Bind(config);
+            #endregion
+
+            #region 启用JWT认证
+            services.AddAuthentication(options =>
             {
-                ValidIssuer = config.Issuer,
-                ValidAudience = config.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.IssuerSigningKey)),
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).
+            AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = config.Issuer,
+                    ValidAudience = config.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.IssuerSigningKey)),
                 //ClockSkew = TimeSpan.FromMinutes(5)
             };
             //通过TokenValidationParameters的构造方法查看参数的默认值如下：
@@ -56,20 +59,33 @@ public class Startup
             //}
             //DefaultClockSkew = TimeSpan.FromSeconds(300); //即ClockSkew的默认值为5分钟
         });
-        #endregion
+            #endregion
 
-        services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-    }
+            #region 基于声明授权
+            services.AddAuthorization(options => options.AddPolicy("TestPolicy", policy =>
+            {
+                policy.RequireClaim(ClaimTypes.Name, "张三");
+                policy.RequireClaim(ClaimTypes.NameIdentifier, "001");
+            }));
+            #endregion
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
-    {
-        if (env.IsDevelopment())
-        {
-            app.UseDeveloperExceptionPage();
+            #region 自定义授权
+            services.AddAuthorization(options => options.AddPolicy("Permission", policy => policy.Requirements.Add(new PermissionRequirement())));
+            services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+            #endregion
+
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
-        app.UseAuthentication();
-        app.UseMvc();
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            app.UseAuthentication();
+            app.UseMvc();
+        }
     }
-}
 }

@@ -32,8 +32,14 @@ namespace FlyLolo.JWT.Server
 
         public ComplexToken CreateToken(User user)
         {
-            Claim[] claims = new Claim[] { new Claim(ClaimTypes.NameIdentifier, user.Code), new Claim(ClaimTypes.Name, user.Name)};
+            Claim[] claims = new Claim[] { new Claim(ClaimTypes.NameIdentifier, user.Code), new Claim(ClaimTypes.Name, user.Name) };
 
+            //下面对code为001的张三添加了一个Claim，用于测试在Token中存储用户的角色信息，对应测试在FlyLolo.JWT.API的BookController的Put方法，若用不到可删除
+            if (user.Code.Equals("001"))
+            {
+                claims = claims.Append(new Claim(ClaimTypes.Role, "TestPutBookRole")).ToArray();
+            }
+            
             return CreateToken(claims);
         }
 

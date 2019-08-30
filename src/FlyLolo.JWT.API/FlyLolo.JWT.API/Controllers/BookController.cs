@@ -6,23 +6,42 @@ using System.Collections.Generic;
 
 namespace FlyLolo.JWT.API.Controllers.Test
 {
-[Route("api/[controller]")]
-[Authorize]
-public class BookController : Controller
-{
-    // GET: api/<controller>
-    [HttpGet]
-    [AllowAnonymous]
-    public IEnumerable<string> Get()
+    [Route("api/[controller]")]
+    public class BookController : Controller
     {
-        return new string[] { "ASP", "C#" };
-    }
+        // GET: api/<controller>
+        [HttpGet]
+        [AllowAnonymous]
+        public IEnumerable<string> Get()
+        {
+            return new string[] { "ASP", "C#" };
+        }
 
-    // POST api/<controller>
-    [HttpPost]
-    public JsonResult Post()
-    {
-        return new JsonResult("Create  Book ...");
+        // POST api/<controller>
+        [HttpPost]
+        [Authorize]
+        public JsonResult Post()
+        {
+            return new JsonResult("Create  Book ...");
+        }
+
+        [HttpDelete]
+        //[Authorize(Policy = "TestPolicy")]
+        [Authorize(Policy = "Permission")]
+        public JsonResult Delete()
+        {
+            return new JsonResult("Delete Book ...");
+        }
+
+        /// <summary>
+        /// 测试在JWT的token中添加角色，在此验证  见TokenHelper
+        /// </summary>
+        /// <returns></returns>
+        [HttpPut]
+        [Authorize(Roles = "TestPutBookRole")]
+        public JsonResult Put()
+        {
+            return new JsonResult("Put  Book ...");
+        }
     }
-}
 }
